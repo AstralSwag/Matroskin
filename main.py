@@ -7,6 +7,7 @@ import re
 app = Flask(__name__)
 
 JIRA_SERVER = "https://jira.it4retail.tech"
+OKDESK_SERVER = "https://zrp.okdesk.ru"
 JIRA_AUTH = ""  # Тут должен быть токен Jira
 OKDESK_AUTH = ""  # Тут должен быть токен Okdesk
 
@@ -29,7 +30,7 @@ def send_request_to_okdesk(data):
     jira_issue_key = data.issue.key
     okdesk_issue_key = ""
     jira_issue = jira.issue(jira_issue_key, fields='description,status')
-    pattern = r"https://zrp.okdesk.ru/issues/(\d+)"
+    pattern = OKDESK_SERVER + r"/issues/(\d+)"
     match = re.search(pattern, jira_issue.description)
     display_status = ""
     okdesk_status = ""
@@ -49,7 +50,7 @@ def send_request_to_okdesk(data):
     else:
         display_status = "Статус задачи не найден"
 
-    route = f"https://zrp.okdesk.ru/api/v1/issues/{okdesk_issue_key}/statuses?api_token={OKDESK_AUTH}"
+    route = f"{OKDESK_SERVER}/api/v1/issues/{okdesk_issue_key}/statuses?api_token={OKDESK_AUTH}"
     body = {"code": okdesk_status}
     response = requests.post(route, json=body)
     print(response.status_code)
@@ -74,7 +75,7 @@ def send_request_to_jira(data):
     # Для получения ключа задачи в Jira придётся сделать запрос к okdesk, т.к. ключ задачи хранится в комментарии
 
     jira_issue_key = ""
-    route = f"https://zrp.okdesk.ru/api/v1/issues/{okdesk_issue_key}/comments?api_token={OKDESK_AUTH}"
+    route = f"{OKDESK_SERVER}/api/v1/issues/{okdesk_issue_key}/comments?api_token={OKDESK_AUTH}"
     response = requests.get(route)
 
     if response.status_code == 200:
@@ -105,7 +106,7 @@ def send_request_to_jira(data):
     else:
         display_status = "Статус задачи не найден"
 
-    route = f"https://jira.it4retail.tech/rest/api/latest/issue/{jira_issue_key}/transitions"
+    route = f"{JIRA_SERVER}/rest/api/latest/issue/{jira_issue_key}/transitions"
     body = {"transition": {"id": jira_status}}
     response = requests.post(route, json=body)
     print(response.status_code)
